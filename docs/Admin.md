@@ -1,4 +1,4 @@
-# Vistia Admin 仕様（FIX / v1.4）
+# Vistia Admin 仕様（FIX / v1.5）
 
 ## 1. ドメイン/URL
 - Admin：`https://admin.vistia.studio/`
@@ -82,6 +82,7 @@
 
 ## 7. 監査ログ
 - 保存期間：1年
+- 方式（FIX）：標準（旧値/新値 + 理由任意）
 - 必須ログ対象：
   1. Adminログイン成功/失敗（2FA含む）
   2. Adminユーザー招待/無効化/削除/ロール変更（Owner操作）
@@ -206,4 +207,8 @@
   - 理由カテゴリ（13分類、必須）
   - 自由記述（任意）
   - 連絡用メールアドレス（任意）
-- レート制限：IP単位で1時間10回
+
+### 12.1 レート制限（FIX）
+- IP単位で1時間10回
+- 実装：AWS WAF Rate-based rule（CloudFront/ALB前段）
+- DBにIPは保存しない

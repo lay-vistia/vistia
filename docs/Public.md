@@ -1,4 +1,4 @@
-# Vistia Public 仕様（FIX / v1.4）
+# Vistia Public 仕様（FIX / v1.5）
 
 ## 1. URL構造
 - `/@{handle}` : プロフィール
@@ -195,7 +195,7 @@
 - フォーマット：JPEG
 - 品質：80
 - トリミング：Manage側でユーザーが決定/調整
-- URL：`/assets/thumb/{userId}/{assetId}_v{n}.jpg`（version付き）
+- URL：`/assets/thumb/{userId}/{assetId}_v{n}.jpg`（version付き、最新のみ保持）
 
 ### 8.3 作品詳細（最適化画像 optimized）
 - 最大辺（長辺）：1280px
@@ -209,18 +209,20 @@
 
 ## 9. UNLISTED token 仕様
 ### 9.1 作品
-- token は推測困難なランダム文字列
+- token：22文字 Base64URL
 - 作品と token は 1:1
 - 有効期限：なし
-- 再発行：可能（旧tokenは無効）
-- UNLISTED → PUBLIC：旧token無効（404）
+- 再発行：無制限（旧tokenは無効）
+- 再発行レート制限：10分に1回（作品単位）
+- UNLISTED → PUBLIC：token無効（404）
 
 ### 9.2 コレクション
-- token は推測困難なランダム文字列
+- token：22文字 Base64URL
 - コレクションと token は 1:1
 - 有効期限：なし
-- 再発行：可能（旧tokenは無効）
-- UNLISTED → PUBLIC：旧token無効（404）
+- 再発行：無制限（旧tokenは無効）
+- 再発行レート制限：10分に1回（コレクション単位）
+- UNLISTED → PUBLIC：token無効（404）
 
 ---
 
@@ -267,3 +269,8 @@
   11. なりすまし
   12. スパム/詐欺
   13. その他
+
+### 12.1 通報レート制限（FIX）
+- IP単位で「1時間10回」
+- 実装：AWS WAF Rate-based rule（CloudFront/ALB前段）
+- DBにIPは保存しない

@@ -1,4 +1,4 @@
-# Vistia 環境仕様（FIX / v1.4）
+# Vistia 環境仕様（FIX / v1.5）
 
 ## 0. 構成
 - モノレポ
@@ -14,6 +14,7 @@
 - メール：SES（送信元 `noreply@vistia.studio`）
 - Secrets：Secrets Manager
 - 監視：CloudWatch
+- WAF：CloudFront前段に適用（通報のrate limit用途）
 
 ---
 
@@ -190,17 +191,17 @@ thumb/
 
 ---
 
-## 9. DB
+## 9. WAF（FIX）
 
-* RDS PostgreSQL + RDS Proxy
+### 9.1 用途
 
-### 9.1 asset最小フィールド（FIX）
+* 通報エンドポイントのレート制限（IP単位）
 
-* `assetId`
-* `userId`
-* `status`（UPLOADED/PROCESSED/FAILED/DELETED）
-* `originalExt`
-* `thumbVersion`（初期1）
-* `createdAt`
-* `deletedAt`
+### 9.2 ルール
 
+* Rate-based rule：IP単位「1時間10回」
+* 対象パス：通報API（例：`/api/report/*`）
+
+### 9.3 方針
+
+* DBにIPを保存しない（レート制限はWAFで完結）
