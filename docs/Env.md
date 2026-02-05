@@ -1,107 +1,206 @@
-# Vistia 環境仕様（FIX / v1.1）
+# Vistia 環境仕様（FIX / v1.4）
 
-## 0. 前提（プロダクト構成）
-- リポジトリ：モノレポ
-- Web：Next.js（App Router）+ TypeScript
-- アプリAPI：Next.js Route Handlers（BFF）
-- 非同期処理はAWS（Lambda等）へ分離（画像処理/モデレーション/Stripe webhook/削除ジョブ）
+## 0. 構成
+- モノレポ
+- Next.js（App Router）+ TypeScript
+- API：Next.js Route Handlers（BFF）
+- 非同期：AWS（SQS/Lambda/EventBridge）
+- DB：RDS PostgreSQL（RDS Proxy）
+- 画像：S3 + CloudFront
+- ホスティング：AWS Amplify Hosting
+- 認証：
+  - Manage：Auth.js（NextAuth）
+  - Admin：Cognito User Pool（招待制、メールOTP 2FA必須）
+- メール：SES（送信元 `noreply@vistia.studio`）
+- Secrets：Secrets Manager
+- 監視：CloudWatch
 
 ---
 
-## 1. 環境一覧
-- dev / stg / prod の3環境を用意し、DB・S3・CloudFront等は環境ごとに分離する。
+## 1. 環境
+- dev / stg / prod（資源は環境別に分離）
 
 ---
 
-## 2. ドメイン（環境別）
-### 2.1 prod
+## 2. ドメイン
+### prod
 - Public：`vistia.app`
 - Manage：`manage.vistia.studio`
 - Admin：`admin.vistia.studio`
 
-### 2.2 stg
+### stg
 - Public：`stg.vistia.app`
 - Manage：`stg.manage.vistia.studio`
 - Admin：`stg.admin.vistia.studio`
 
-### 2.3 dev
+### dev
 - Public：`dev.vistia.app`
 - Manage：`dev.manage.vistia.studio`
 - Admin：`dev.admin.vistia.studio`
 
 ---
 
-## 3. ホスティング（Web/API）
-- AWS Amplify Hosting を使用し、Next.js（SSR含む）をホストする。
-- Public / Manage / Admin は同一モノレポ内アプリとして運用し、Amplifyでそれぞれデプロイする。
+## 3. 画像ストレージ（S3）
+### 3.1 プレフィックス（FIX）
+```
+
+assets/
+original/
+{userId}/{assetId}.{ext}
+optimized/
+{userId}/{assetId}.jpg
+thumb/
+{userId}/{assetId}_v{n}.jpg
+
+```
+
+### 3.2 オリジナルの扱い
+- アップロードされたオリジナル画像は絶対に表示しない
+- Public/Manageで配信するのは optimized / thumb のみ
+
+### 3.3 コールドストレージ（FIX）
+- 変換成功した original は、成功後1日でコールドストレージへ移行
+- 実装：S3 Lifecycle
+  - 対象：`assets/original/`
+  - 移行：1日後 → S3 Glacier Instant Retrieval
+
+### 3.4 削除（FIX）
+- 論理削除〜30日後に物理削除ジョブで削除
+  - `original` `optimized` `thumb`（最新のみ運用）すべて削除
+- 30日猶予中はS3に残す（参照は404）
 
 ---
 
-## 4. 画像ストレージ・配信
-### 4.1 保存先
-- Amazon S3
-- 環境ごとに別バケット（dev/stg/prod）
+## 4. 配信（CloudFront）
+### 4.1 配信パス（FIX）
+- 許可：`/assets/optimized/*` と `/assets/thumb/*` のみ
+- その他：404
 
-### 4.2 CDN
-- CloudFront を必ず挟む
-- 環境ごとに別ディストリビューション（dev/stg/prod）
+### 4.2 originalの二重防御（FIX）
+- S3バケットポリシーで `assets/original/*` を CloudFront(OAC) からも明示的に拒否
 
-### 4.3 アップロード経路
-- presigned URL でブラウザから直接 S3 にアップロードする。
+### 4.3 Cache-Control（FIX）
+- optimized：
+  - `Cache-Control: public, max-age=31536000, immutable`
+- thumb（version付き）：
+  - `Cache-Control: public, max-age=31536000, immutable`
 
----
-
-## 5. 画像処理パイプライン（非同期）
-- S3イベント → SQS → Lambda の順で処理する（安定性のためキューを挟む）
-
----
-
-## 6. モデレーション（自動検知）
-- ベンダー：AWS Rekognition（DetectModerationLabels）
-- 画像処理とは別Lambdaで実行する（分離）
-- 画像処理完了後のイベントを受けてスキャンし、閾値超えでAdminチケットを起票する（自動ブロックはしない）
+### 4.4 thumb更新（FIX）
+- トリミング更新で `thumbVersion` を +1 して新URLへ
+- CloudFront invalidation：不要
+- 旧versionは削除し、S3上は最新1つだけ残す
 
 ---
 
-## 7. DB
-- Amazon RDS PostgreSQL
-- RDS Proxy を使用する
+## 5. アップロード（presigned PUT）
+### 5.1 経路
+- ブラウザ → S3（presigned PUT）
+- 完了後、クライアントが `POST /api/assets/{assetId}/complete` を呼ぶ（FIX）
+
+### 5.2 CORS（FIX / Manageのみ・localhostなし・Adminなし）
+```json
+[
+  {
+    "AllowedOrigins": [
+      "https://manage.vistia.studio",
+      "https://stg.manage.vistia.studio",
+      "https://dev.manage.vistia.studio"
+    ],
+    "AllowedMethods": ["PUT", "HEAD"],
+    "AllowedHeaders": ["Content-Type", "Content-MD5", "x-amz-*", "Authorization"],
+    "ExposeHeaders": ["ETag", "x-amz-request-id"],
+    "MaxAgeSeconds": 3000
+  }
+]
+```
+
+### 5.3 署名URL制約（FIX）
+
+* アップロード先キー：`assets/original/{userId}/{assetId}.{ext}`
+* 署名URL期限：10分
+* サイズ上限：50MB
+
+### 5.4 検証（FIX）
+
+* サーバー側で必ず検証してから `PROCESSED` にする
+
+  * サイズ（<=50MB）
+  * 拡張子候補：jpg/jpeg/png/webp/heic/heif
+  * Content-Type候補：image/* + application/octet-stream（後段で中身判定必須）
+  * マジックバイトで実ファイル種別を確定
+  * デコード不可/矛盾はFAILED
 
 ---
 
-## 8. Stripe（課金）
-- Webhook受け口：API Gateway + Lambda
+## 6. 非同期処理（画像変換）
+
+### 6.1 キュー
+
+* SQS
+
+### 6.2 メッセージ（FIX）
+
+```json
+{ "assetId": "..." }
+```
+
+### 6.3 変換出力（FIX）
+
+* optimized：`assets/optimized/{userId}/{assetId}.jpg`
+* thumb：`assets/thumb/{userId}/{assetId}_v{n}.jpg`（初回v1）
+* 変換成功後のみ表示可能
 
 ---
 
-## 9. 認証
-- Manage：Auth.js（NextAuth）
-- Admin：Amazon Cognito User Pool（招待制、2FAメールOTP必須）
+## 7. モデレーション（自動検知）
+
+### 7.1 ベンダー
+
+* AWS Rekognition（DetectModerationLabels）
+
+### 7.2 対象（FIX）
+
+* optimized（表示用1280 JPEG）をスキャン
+
+### 7.3 MinConfidence（FIX）
+
+* 60
+
+### 7.4 AUTO起票（FIX）
+
+* 0.60以上で起票（LOWでも起票）
+* 0.60–0.749：LOW
+* 0.75–0.899：MEDIUM
+* 0.90以上：HIGH
+* CRITICALは自動付与しない
+
+### 7.5 重複（FIX）
+
+* assetIdにつきAUTOチケットは1件（更新で履歴を残す）
 
 ---
 
-## 10. メール送信
-- 送信元：`noreply@vistia.studio`
-- 基盤：Amazon SES
+## 8. ジョブ（遅延実行）
+
+* EventBridge Scheduler → Lambda
+* 用途：
+
+  * 論理削除から30日後の物理削除
+  * （必要なら）失敗リトライの再投入
 
 ---
 
-## 11. Secrets管理
-- AWS Secrets Manager
+## 9. DB
 
----
+* RDS PostgreSQL + RDS Proxy
 
-## 12. ジョブ（遅延実行）
-- EventBridge Scheduler → Lambda
+### 9.1 asset最小フィールド（FIX）
 
----
+* `assetId`
+* `userId`
+* `status`（UPLOADED/PROCESSED/FAILED/DELETED）
+* `originalExt`
+* `thumbVersion`（初期1）
+* `createdAt`
+* `deletedAt`
 
-## 13. ログ/監視
-- CloudWatch Logs
-- CloudWatch Alarms
-
----
-
-## 14. CI/CD とブランチ戦略
-- GitHub連携でAmplifyが自動ビルド/自動デプロイ
-- `main` → prod / `stg` → stg / `dev` → dev / PR → preview
