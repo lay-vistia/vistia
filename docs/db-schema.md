@@ -1,11 +1,51 @@
-# Vistia DB Schema（FIX / v1.2）
+# Vistia DB Schema（FIX / v1.3）
 
 ## 0. 方針
 - DB: PostgreSQL
 - 削除は原則「論理削除（deletedAt）」→ 30日後ジョブで物理削除（S3/DB）
 - Publicの表示制御は `hidden_targets`（HIDE）と `deletedAt` を参照
-- IDは原則 UUID v7（アプリ側で生成し、DB型は uuid）
+- IDは原則 UUID v7（アプリ側で生成、DB型は uuid）
 - enumは DB ENUM でも text+CHECK でも良い（本文は「ENUM想定」で記述）
+- `createdAt` は **immutable（作成時に一度だけ、更新しない）**
+- `updatedAt` は **更新のたびに更新する**
+
+---
+
+## 0.1 createdAt / updatedAt 規約（FIX）
+### createdAt（固定）
+- 作成時に一度だけ入る
+- 編集・並び替え・visibility変更・token再発行などで変更しない
+- Publicの並び（例：ギャラリー `createdAt desc`）は常にこれを基準にする
+
+対象（FIX）：
+- `assets.createdAt`
+- `posts.createdAt`
+- `collections.createdAt`
+- `collection_items.createdAt`
+- `tickets.createdAt`
+- `ticket_events.createdAt`
+- `notifications.createdAt`
+- `audit_logs.createdAt`
+
+### updatedAt（更新）
+- レコード内容が変わったら更新する
+
+対象（FIX）：
+- `users.updatedAt`
+- `posts.updatedAt`
+- `collections.updatedAt`
+- `external_links.updatedAt`
+- `profiles.updatedAt`
+- `tickets.updatedAt`
+- `admin_users.updatedAt`
+
+### sortOrderを持つ並び（FIX）
+- ユーザー指定順は `sortOrder` を優先、同値は `createdAt` で安定化
+
+推奨 ORDER BY（FIX）：
+- collections：`ORDER BY sortOrder ASC, createdAt ASC`
+- collection_items：`ORDER BY sortOrder ASC, createdAt ASC`
+- external_links：`ORDER BY sortOrder ASC, createdAt ASC`
 
 ---
 
@@ -21,7 +61,7 @@ Public/Manageの主体ユーザー。
 | plan | enum | FREE / PRO, default FREE |
 | planTrialEndsAt | timestamptz | NULL |
 | bannedAt | timestamptz | NULL |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | updatedAt | timestamptz | NOT NULL |
 | deletedAt | timestamptz | NULL（退会/論理削除） |
 
@@ -44,7 +84,7 @@ Index:
 | email | citext | NULL（EMAIL/連絡用） |
 | emailVerifiedAt | timestamptz | NULL |
 | passwordHash | text | NULL（EMAILのみ） |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | updatedAt | timestamptz | NOT NULL |
 
 Constraints:
@@ -64,7 +104,7 @@ Constraints:
 | status | enum | UPLOADED / PROCESSED / FAILED / DELETED |
 | originalExt | text | NOT NULL（拡張子保持） |
 | thumbVersion | int | NOT NULL default 1 |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | deletedAt | timestamptz | NULL |
 
 Index:
@@ -83,7 +123,7 @@ Index:
 | userId | uuid | FK → users.id |
 | assetId | uuid | FK → assets.assetId, UNIQUE（1post=1asset） |
 | visibility | enum | PUBLIC / UNLISTED / PRIVATE |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | updatedAt | timestamptz | NOT NULL |
 | deletedAt | timestamptz | NULL |
 
@@ -101,7 +141,7 @@ Index:
 | title | text | NOT NULL |
 | visibility | enum | PUBLIC / UNLISTED / PRIVATE |
 | sortOrder | int | NOT NULL default 0 |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | updatedAt | timestamptz | NOT NULL |
 | deletedAt | timestamptz | NULL |
 
@@ -117,7 +157,7 @@ Index:
 | collectionId | uuid | FK → collections.id |
 | postId | uuid | FK → posts.id |
 | sortOrder | int | NOT NULL default 0 |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 Constraints/Index:
 - UNIQUE(collectionId, postId)
@@ -136,7 +176,7 @@ tokenは22文字Base64URL。再発行で旧token無効。常に最新1つがア�
 | targetId | uuid | posts.id / collections.id |
 | token | text | UNIQUE（22文字 Base64URL） |
 | isActive | bool | default true |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 Constraints:
 - UNIQUE(targetType, targetId) WHERE isActive=true
@@ -152,7 +192,7 @@ Constraints:
 | userId | uuid | FK → users.id |
 | postId | uuid | FK → posts.id |
 | sortOrder | int | CHECK sortOrder in (0,1,2) |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 Constraints:
 - UNIQUE(userId, sortOrder)
@@ -184,7 +224,7 @@ label/url/description/icon。無制限、並び替えあり。
 | description | text | NOT NULL default '' |
 | iconAssetId | uuid | FK → assets.assetId, NULL |
 | sortOrder | int | NOT NULL default 0 |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | updatedAt | timestamptz | NOT NULL |
 
 Index:
@@ -200,7 +240,7 @@ Index:
 | id | uuid | PK（UUID v7） |
 | userId | uuid | FK → users.id |
 | assetId | uuid | FK → assets.assetId |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 Constraints:
 - UNIQUE(userId, assetId)
@@ -218,6 +258,7 @@ Adminの非表示はHIDEで統一。
 | hiddenAt | timestamptz | NOT NULL |
 | hiddenByAdminUserId | uuid | FK → admin_users.id |
 | reason | text | NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 Constraints:
 - UNIQUE(targetType, targetId)
@@ -238,14 +279,12 @@ Index:
 | targetType | enum | POST / COLLECTION / ASSET / TICKET |
 | targetId | uuid | NOT NULL |
 | targetUrl | text | NOT NULL（Manage内リンク） |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | readAt | timestamptz | NULL |
 
 Index:
 - INDEX(userId, createdAt)
 - INDEX(userId, readAt)
-
-※保持/上限の削除運用はジョブ（DB制約にはしない）。
 
 ---
 
@@ -259,7 +298,7 @@ Cognito連携。
 | email | citext | NOT NULL |
 | role | enum | OWNER / ADMIN / SUPPORT / DESIGNER |
 | isActive | bool | default true |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | updatedAt | timestamptz | NOT NULL |
 
 ---
@@ -279,7 +318,7 @@ targetTypeは POST / COLLECTION / ASSET の3種。targetUrlは保存しない（
 | assigneeAdminUserId | uuid | FK → admin_users.id, NULL |
 | reportCategory | text | NULL（13カテゴリ） |
 | autoCategory | text | NULL（9カテゴリ） |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 | updatedAt | timestamptz | NOT NULL |
 | closedAt | timestamptz | NULL |
 
@@ -299,12 +338,14 @@ Index:
 | kind | enum | COMMENT / STATUS_CHANGE / PRIORITY_CHANGE / ASSIGNEE_CHANGE / AUTO_RESULT |
 | payload | jsonb | NOT NULL |
 | createdByAdminUserId | uuid | FK → admin_users.id, NULL |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 Index:
 - INDEX(ticketId, createdAt)
 
 ### 14.2 reports（ユーザー通報の入力）
+※IPレート制限はAWS WAFで行うため、DBにIPは保存しない。
+
 | column | type | constraints / note |
 |---|---|---|
 | id | uuid | PK（UUID v7） |
@@ -312,8 +353,7 @@ Index:
 | category | text | NOT NULL（13カテゴリ） |
 | message | text | NULL |
 | contactEmail | citext | NULL |
-| reporterIp | inet | NULL（保存する場合） |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 ---
 
@@ -331,8 +371,15 @@ Index:
 | before | jsonb | NULL |
 | after | jsonb | NULL |
 | reason | text | NULL |
-| createdAt | timestamptz | NOT NULL |
+| createdAt | timestamptz | NOT NULL（固定） |
 
 Index:
 - INDEX(targetType, targetId, createdAt)
 - INDEX(actorAdminUserId, createdAt)
+
+---
+
+## 16. インフラ側のレート制限（FIX）
+- 通報レート制限：IP単位「1時間10回」
+- 実装：AWS WAF Rate-based rule（CloudFront/ALBの前段）
+- DBにIPを保存しない
