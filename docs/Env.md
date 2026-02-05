@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 # Vistia 環境仕様（FIX / v1.5）
+=======
+# Vistia 環境仕様（FIX / v1.6）
+>>>>>>> 671a141 (update SPECs)
 
 ## 0. 構成
 - モノレポ
@@ -59,13 +63,35 @@ thumb/
 - アップロードされたオリジナル画像は絶対に表示しない
 - Public/Manageで配信するのは optimized / thumb のみ
 
-### 3.3 コールドストレージ（FIX）
-- 変換成功した original は、成功後1日でコールドストレージへ移行
-- 実装：S3 Lifecycle
-  - 対象：`assets/original/`
-  - 移行：1日後 → S3 Glacier Instant Retrieval
+### 3.3 サムネversion運用（FIX）
+- thumb URLは version付き：
+  - `assets/thumb/{userId}/{assetId}_v{n}.jpg`
+- トリミング更新で `thumbVersion` を +1 して新URLへ
+- 旧versionは削除し、S3上は最新1つだけ残す
+- CloudFront invalidation：不要
 
-### 3.4 削除（FIX）
+### 3.4 コールドストレージ（FIX：タグ＋Lifecycle）
+「変換成功後1日で移行」を、S3 Lifecycleの**タグ条件**で実現する。
+
+#### 3.4.1 タグ付与
+- 変換成功時（optimized/thumb生成成功 + DBでPROCESSED更新成功の直後）に original に付与：
+  - `processed=true`
+  - `processedAt=YYYY-MM-DD`（任意）
+
+- 変換失敗時（DBでFAILED更新成功の直後）に original に付与：
+  - `failed=true`
+  - `failedAt=YYYY-MM-DD`（任意）
+
+#### 3.4.2 Lifecycleルール
+- ルール①（成功originalのコールド移行）
+  - 対象：prefix `assets/original/` かつ tag `processed=true`
+  - アクション：**1日後 → S3 Glacier Instant Retrieval**
+
+- ルール②（失敗originalの削除）
+  - 対象：prefix `assets/original/` かつ tag `failed=true`
+  - アクション：**7日後にExpiration（削除）**
+
+### 3.5 削除（FIX）
 - 論理削除〜30日後に物理削除ジョブで削除
   - `original` `optimized` `thumb`（最新のみ運用）すべて削除
 - 30日猶予中はS3に残す（参照は404）
@@ -85,11 +111,6 @@ thumb/
   - `Cache-Control: public, max-age=31536000, immutable`
 - thumb（version付き）：
   - `Cache-Control: public, max-age=31536000, immutable`
-
-### 4.4 thumb更新（FIX）
-- トリミング更新で `thumbVersion` を +1 して新URLへ
-- CloudFront invalidation：不要
-- 旧versionは削除し、S3上は最新1つだけ残す
 
 ---
 
@@ -150,6 +171,20 @@ thumb/
 * optimized：`assets/optimized/{userId}/{assetId}.jpg`
 * thumb：`assets/thumb/{userId}/{assetId}_v{n}.jpg`（初回v1）
 * 変換成功後のみ表示可能
+
+### 6.4 画像処理Lambda（processor）のS3権限（FIX）
+
+processor role に付与する最小権限：
+
+* Read original：
+
+  * `s3:GetObject`, `s3:HeadObject`, `s3:GetObjectTagging` on `assets/original/*`
+* Write derived：
+
+  * `s3:PutObject`, `s3:HeadObject`, `s3:DeleteObject` on `assets/optimized/*`, `assets/thumb/*`
+* Tag original：
+
+  * `s3:PutObjectTagging` on `assets/original/*`
 
 ---
 
