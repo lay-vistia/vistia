@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     ok: true,
     userId,
     nextAction: "RELOGIN",
-    redirectTo: "/",
+    redirectTo: "/?relogin=1",
   });
 
   clearAuthSessionCookies(response, request);
