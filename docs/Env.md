@@ -1,8 +1,4 @@
-<<<<<<< HEAD
-# Vistia 環境仕様（FIX / v1.5）
-=======
 # Vistia 環境仕様（FIX / v1.6）
->>>>>>> 671a141 (update SPECs)
 
 ## 0. 構成
 - モノレポ
