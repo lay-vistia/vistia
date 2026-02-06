@@ -41,6 +41,22 @@
 
 ---
 
+## 2.1 Manage認証の環境変数（FIX）
+- `NEXTAUTH_URL`
+- `NEXTAUTH_SECRET`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `TWITTER_CLIENT_ID`
+- `TWITTER_CLIENT_SECRET`
+- `TIKTOK_CLIENT_ID`
+- `TIKTOK_CLIENT_SECRET`
+
+補足（FIX）：
+- 上記は `dev / stg / prod` で値を分離する
+- すべて Secrets Manager で管理する
+
+---
+
 ## 3. 画像ストレージ（S3）
 ### 3.1 プレフィックス（FIX）
 ```
