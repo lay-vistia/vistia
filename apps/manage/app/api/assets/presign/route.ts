@@ -2,13 +2,18 @@ import { NextResponse } from "next/server";
 import { uuidv7 } from "../../../../../../packages/shared/uuidv7";
 import { originalKey } from "../../../../../../packages/storage/keys";
 import { createS3Client, presignPut } from "../../../../../../packages/storage/s3";
+import { requireUserId } from "../../../../lib/auth";
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "heic", "heif"]);
 
 export async function POST(request: Request) {
-  // TODO: Auth.js session -> userId
-  const userId = "TODO_USER_ID";
+  let userId: string;
+  try {
+    userId = await requireUserId();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const body = await request.json().catch(() => null);
   if (!body || typeof body.ext !== "string" || typeof body.contentType !== "string") {

@@ -10,6 +10,7 @@ import {
   putObjectTags,
 } from "../../../../../../../packages/storage/s3";
 import { createSqsClient, sendAssetMessage } from "../../../../../../../packages/queue/sqs";
+import { requireUserId } from "../../../../lib/auth";
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "heic", "heif"]);
@@ -18,8 +19,12 @@ export async function POST(
   request: Request,
   context: { params: { assetId: string } }
 ) {
-  // TODO: Auth.js session -> userId
-  const userId = "TODO_USER_ID";
+  let userId: string;
+  try {
+    userId = await requireUserId();
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
 
   const { assetId } = context.params;
   const body = await request.json().catch(() => null);
