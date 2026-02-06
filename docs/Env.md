@@ -21,6 +21,10 @@
 ## 1. 環境
 - dev / stg / prod（資源は環境別に分離）
 
+補足（FIX）：
+- `dev / stg / prod` の全環境で RDS への接続は RDS Proxy 経由とする
+- `DATABASE_URL` は RDS Proxy のエンドポイントを指す
+
 ---
 
 ## 2. ドメイン
