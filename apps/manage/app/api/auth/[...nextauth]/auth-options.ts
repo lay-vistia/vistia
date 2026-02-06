@@ -12,7 +12,6 @@ import { verifyPassword } from "../../../../../../packages/auth/password";
 
 export const authOptions: NextAuthOptions = {
   providers: [
-    // TODO: OAuth 初回ログインのユーザー作成フローを確定
     CredentialsProvider({
       name: "EmailPassword",
       credentials: {
@@ -52,6 +51,9 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       const userId = (token as any).userId as string | undefined;
       if (session.user && userId) (session.user as any).id = userId;
+      if (session.user && !userId && (token as any).oauthProvider) {
+        (session.user as any).needsOnboarding = true;
+      }
       return session;
     },
     async jwt({ token, user, account }) {
@@ -72,7 +74,13 @@ export const authOptions: NextAuthOptions = {
             provider,
             account.providerAccountId
           );
-          if (authAccount?.userId) (token as any).userId = authAccount.userId;
+          if (authAccount?.userId) {
+            (token as any).userId = authAccount.userId;
+          } else {
+            // OAuth 初回ログイン用の一時情報をトークンに保持
+            (token as any).oauthProvider = provider;
+            (token as any).oauthProviderAccountId = account.providerAccountId;
+          }
         }
       }
       return token;
@@ -88,15 +96,8 @@ export const authOptions: NextAuthOptions = {
           ? "TIKTOK"
           : null;
       if (!provider || !account.providerAccountId) return false;
-
-      const db = getDb();
-      const authAccount = await getAuthAccountByProviderUserId(
-        db,
-        provider,
-        account.providerAccountId
-      );
-      // TODO: OAuth 初回ログイン時のユーザー作成フロー確定後に処理を追加
-      return Boolean(authAccount?.userId);
+      // OAuth 初回ログインも許可し、後続のオンボーディングでユーザー作成する
+      return true;
     },
   },
   session: { strategy: "jwt" },

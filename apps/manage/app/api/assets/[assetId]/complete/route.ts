@@ -10,7 +10,7 @@ import {
   putObjectTags,
 } from "../../../../../../../packages/storage/s3";
 import { createSqsClient, sendAssetMessage } from "../../../../../../../packages/queue/sqs";
-import { requireUserId } from "../../../../lib/auth";
+import { requireUserId } from "../../../../../lib/auth";
 
 const MAX_UPLOAD_BYTES = 50 * 1024 * 1024;
 const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "heic", "heif"]);

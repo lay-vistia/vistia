@@ -27,6 +27,22 @@ export async function createEmailAuthAccount(
   );
 }
 
+export async function createOAuthAuthAccount(
+  db: DbClient,
+  input: {
+    id: string;
+    userId: string;
+    provider: "GOOGLE" | "X" | "TIKTOK";
+    providerUserId: string;
+    email: string | null;
+  }
+): Promise<void> {
+  await db.query(
+    "INSERT INTO auth_accounts (id, userId, provider, providerUserId, email, createdAt, updatedAt) VALUES ($1, $2, $3, $4, $5, now(), now())",
+    [input.id, input.userId, input.provider, input.providerUserId, input.email]
+  );
+}
+
 export async function getAuthAccountByProviderUserId(
   db: DbClient,
   provider: "GOOGLE" | "X" | "TIKTOK",
