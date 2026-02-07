@@ -62,6 +62,11 @@
 ---
 
 ## 3. 画像ストレージ（S3）
+### 3.0 dev 環境のデフォルト名（暫定 / FIX）
+- S3 バケット：`vistia-dev-assets`
+- SQS キュー：`vistia-dev-assets-queue`
+- 画像処理 Lambda：`vistia-dev-processor`
+
 ### 3.1 プレフィックス（FIX）
 ```
 

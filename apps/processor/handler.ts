@@ -12,7 +12,7 @@ const THUMB_SIZE = 512;
 
 export async function handler(event: SQSEvent): Promise<void> {
   const bucket = process.env.ASSETS_BUCKET;
-  const region = process.env.AWS_REGION;
+  const region = process.env.AWS_DEFAULT_REGION ?? process.env.AWS_REGION;
   if (!bucket || !region) {
     throw new Error("Missing ASSETS_BUCKET or AWS_REGION");
   }

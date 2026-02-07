@@ -16,7 +16,11 @@ async function main() {
     throw new Error("DATABASE_URL が設定されていません");
   }
 
-  const client = new Client({ connectionString });
+  const ssl =
+    process.env.PG_SSL_REJECT_UNAUTHORIZED === "false"
+      ? { rejectUnauthorized: false }
+      : undefined;
+  const client = new Client({ connectionString, ssl });
   await client.connect();
 
   try {
