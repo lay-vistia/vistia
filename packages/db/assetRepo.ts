@@ -6,7 +6,7 @@ export type DbClient = {
 
 export async function getAssetById(db: DbClient, assetId: string): Promise<AssetRecord | null> {
   const res = await db.query(
-    "SELECT assetId, userId, status, originalExt, thumbVersion, createdAt, deletedAt FROM assets WHERE assetId = $1",
+    "SELECT assetId as \"assetId\", userId as \"userId\", status, originalExt as \"originalExt\", thumbVersion as \"thumbVersion\", createdAt as \"createdAt\", deletedAt as \"deletedAt\" FROM assets WHERE assetId = $1",
     [assetId]
   );
   return res.rows[0] ?? null;
