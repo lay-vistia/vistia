@@ -17,7 +17,7 @@ const ALLOWED_EXT = new Set(["jpg", "jpeg", "png", "webp", "heic", "heif"]);
 
 export async function POST(
   request: Request,
-  context: { params: { assetId: string } }
+  { params }: { params: { assetId: string } }
 ) {
   let userId: string;
   try {
@@ -26,7 +26,7 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { assetId } = context.params;
+  const { assetId } = params;
   const body = await request.json().catch(() => null);
   if (!body || typeof body.ext !== "string") {
     return NextResponse.json({ error: "Invalid request" }, { status: 400 });
