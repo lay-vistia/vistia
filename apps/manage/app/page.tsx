@@ -20,6 +20,11 @@ export default function ManageTopPage({ searchParams }: PageProps) {
         ) : (
           <p style={styles.text}>ログインしてください。</p>
         )}
+        <div style={styles.actions}>
+          <a href="/login" style={styles.linkButton}>ログイン</a>
+          <a href="/upload" style={styles.linkButton}>アップロードへ</a>
+          <a href="/logout" style={styles.linkButton}>ログアウト</a>
+        </div>
       </section>
     </main>
   );
@@ -57,5 +62,22 @@ const styles: Record<string, CSSProperties> = {
   text: {
     margin: 0,
     color: "#374151",
+  },
+  linkButton: {
+    marginTop: 12,
+    minHeight: 44,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 10,
+    background: "#111827",
+    color: "#ffffff",
+    padding: "10px 14px",
+    fontWeight: 700,
+    textDecoration: "none",
+  },
+  actions: {
+    display: "grid",
+    gap: 8,
   },
 };
