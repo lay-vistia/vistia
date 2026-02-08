@@ -2,7 +2,6 @@ import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import TwitterProvider from "next-auth/providers/twitter";
-import TikTokProvider from "next-auth/providers/tiktok";
 import { getDb } from "../../../../../../packages/db/client";
 import {
   getAuthAccountByProviderUserId,
@@ -42,10 +41,7 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.TWITTER_CLIENT_ID ?? "",
       clientSecret: process.env.TWITTER_CLIENT_SECRET ?? "",
     }),
-    TikTokProvider({
-      clientId: process.env.TIKTOK_CLIENT_ID ?? "",
-      clientSecret: process.env.TIKTOK_CLIENT_SECRET ?? "",
-    }),
+    // TODO: TikTok Provider は next-auth の標準にないため、OAuth 設定を別途実装する
   ],
   callbacks: {
     async session({ session, token }) {
