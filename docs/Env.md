@@ -207,6 +207,14 @@ processor role に付与する最小権限：
 
   * `s3:PutObjectTagging` on `assets/original/*`
 
+### 6.5 Lambda のネットワーク（FIX）
+- Lambda は RDS Proxy に到達できる VPC / Subnet / Security Group を設定する
+- RDS Proxy の SG に Lambda の SG を `5432` で許可する
+
+### 6.6 Lambda の環境変数（FIX）
+- `ASSETS_BUCKET`
+- `DATABASE_URL`（RDS Proxy のエンドポイント）
+
 ---
 
 ## 7. モデレーション（自動検知）

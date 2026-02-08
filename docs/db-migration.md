@@ -26,3 +26,7 @@ npm run db:migrate
 ## 注意
 - `createdAt`/`updatedAt` の運用は `docs/db-schema.md` を唯一の正とする
 - 不明点は `docs/open-questions.md` に追記してから実装する
+
+## 補足（運用）
+- RDS Proxy 経由での接続が前提
+- どうしても VPC 外から実行する場合は、一時的に RDS を Public にして実行し、完了後に必ず戻す
