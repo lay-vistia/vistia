@@ -1,10 +1,10 @@
 import { S3Client, GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { SQSEvent } from "aws-lambda";
 import sharp from "sharp";
-import { getDb } from "../../packages/db/client";
-import { getAssetById, updateAssetStatus } from "../../packages/db/assetRepo";
-import { originalKey, optimizedKey, thumbKey } from "../../packages/storage/keys";
-import { putObjectTags } from "../../packages/storage/s3";
+import { getDb } from "../../../packages/db/client";
+import { getAssetById, updateAssetStatus } from "../../../packages/db/assetRepo";
+import { originalKey, optimizedKey, thumbKey } from "../../../packages/storage/keys";
+import { putObjectTags } from "../../../packages/storage/s3";
 
 const JPEG_QUALITY = 80;
 const OPTIMIZED_MAX = 1280;

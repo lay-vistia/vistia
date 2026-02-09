@@ -43,3 +43,19 @@
 ## 9. OAuth 初回時の具体策
 状態：クローズ
 結論：`handle/displayName` をその場で入力してから `users` を作成する。
+
+---
+
+# 追加TODO
+
+## 10. Manageの新規作成（Email）の実行基盤
+状態：クローズ
+質問：`/api/auth/signup` の実行先を Lambda Function URL にする場合、エンドポイントURLと認証方式をどうするか。
+デフォルト案：`SIGNUP_ENDPOINT` に Function URL を設定し、必要なら `SIGNUP_API_KEY` を `x-api-key` で渡す。
+回答：それでいい
+
+## 11. 本番の Signup エンドポイント（API Gateway への移行）
+状態：クローズ
+質問：本番では Function URL のままにするか、API Gateway + WAF に移行するか。
+デフォルト案：dev は Function URL、prod は API Gateway + WAF + レート制限。
+回答：それでいい
