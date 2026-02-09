@@ -3,37 +3,71 @@
 import { CSSProperties, FormEvent, useState } from "react";
 import { signIn } from "next-auth/react";
 
-export default function LoginPage() {
+export default function SignupPage() {
+  const [handle, setHandle] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [status, setStatus] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  async function handleCredentialsLogin(event: FormEvent<HTMLFormElement>) {
+  async function handleSignup(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus(null);
     setIsSubmitting(true);
 
-    const result = await signIn("credentials", {
-      redirect: false,
-      email: email.trim().toLowerCase(),
-      password,
-    });
+    try {
+      const response = await fetch("/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          handle: handle.trim().toLowerCase(),
+          displayName: displayName.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+        }),
+      });
 
-    if (result?.error) {
-      setStatus("ログインに失敗しました。メールアドレスとパスワードを確認してください。");
-    } else {
-      window.location.href = "/";
+      const data = await response.json().catch(() => null);
+      if (!response.ok) {
+        setStatus(data?.error ?? "作成に失敗しました。");
+        return;
+      }
+
+      setStatus("作成しました。ログインしてください。");
+      window.location.href = "/login";
+    } catch {
+      setStatus("通信エラーが発生しました。");
+    } finally {
+      setIsSubmitting(false);
     }
-
-    setIsSubmitting(false);
   }
 
   return (
     <main style={styles.main}>
       <section style={styles.card}>
-        <h1 style={styles.title}>ログイン</h1>
-        <form onSubmit={handleCredentialsLogin} style={styles.form}>
+        <h1 style={styles.title}>新規作成</h1>
+        <form onSubmit={handleSignup} style={styles.form}>
+          <label style={styles.label}>
+            ハンドル
+            <input
+              type="text"
+              value={handle}
+              onChange={(event) => setHandle(event.target.value)}
+              autoComplete="username"
+              style={styles.input}
+            />
+          </label>
+          <label style={styles.label}>
+            表示名
+            <input
+              type="text"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              autoComplete="name"
+              style={styles.input}
+            />
+          </label>
           <label style={styles.label}>
             メールアドレス
             <input
@@ -50,12 +84,12 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              autoComplete="current-password"
+              autoComplete="new-password"
               style={styles.input}
             />
           </label>
           <button type="submit" disabled={isSubmitting} style={styles.button}>
-            {isSubmitting ? "ログイン中..." : "ログイン"}
+            {isSubmitting ? "作成中..." : "作成する"}
           </button>
         </form>
 
@@ -67,27 +101,23 @@ export default function LoginPage() {
             onClick={() => signIn("google")}
             style={styles.outlineButton}
           >
-            Googleで続行
+            Googleで作成
           </button>
           <button
             type="button"
             onClick={() => signIn("twitter")}
             style={styles.outlineButton}
           >
-            Xで続行
+            Xで作成
           </button>
           <button
             type="button"
             onClick={() => signIn("tiktok")}
             style={styles.outlineButton}
           >
-            TikTokで続行
+            TikTokで作成
           </button>
         </div>
-
-        <p style={styles.linkText}>
-          アカウントがない場合は <a href="/signup" style={styles.link}>新規作成</a>
-        </p>
 
         {status ? <p style={styles.status}>{status}</p> : null}
       </section>
@@ -152,16 +182,6 @@ const styles: Record<string, CSSProperties> = {
   oauthGroup: {
     display: "grid",
     gap: 8,
-  },
-  linkText: {
-    margin: 0,
-    fontSize: 14,
-    color: "#4b5563",
-  },
-  link: {
-    color: "#111827",
-    fontWeight: 600,
-    textDecoration: "underline",
   },
   outlineButton: {
     minHeight: 44,
