@@ -55,6 +55,9 @@ export async function handler(
     await db.query("COMMIT");
   } catch (error) {
     await db.query("ROLLBACK");
+    const message = error instanceof Error ? error.message : String(error);
+    const code = typeof (error as any)?.code === "string" ? (error as any).code : "unknown";
+    console.error("[signup] failed", { code, message });
     return json(400, { error: "Signup failed" });
   }
 

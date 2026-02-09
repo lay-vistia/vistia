@@ -59,3 +59,9 @@
 質問：本番では Function URL のままにするか、API Gateway + WAF に移行するか。
 デフォルト案：dev は Function URL、prod は API Gateway + WAF + レート制限。
 回答：それでいい
+
+## 12. DB テーブル閲覧用の確認手段
+状態：クローズ
+質問：Lambda から「テーブル一覧/件数/特定テーブルの最新数件」など、どこまで確認できるようにするか。認証方式は `SIGNUP_API_KEY` の共用で良いか。
+回答：検証用に広く使う。APIキーは別にする。
+デフォルト案：devのみ Function URL + `INSPECT_API_KEY` で `tables` 一覧と `count/recent/schema` を許可。`INSPECT_TABLES` で許可テーブルを制限。
