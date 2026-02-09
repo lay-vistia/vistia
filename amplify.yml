@@ -6,6 +6,7 @@ applications:
         preBuild:
           commands:
             - |
+              mkdir -p apps/manage
               cat <<EOF > apps/manage/.env.production
               NEXTAUTH_URL=${NEXTAUTH_URL}
               NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
