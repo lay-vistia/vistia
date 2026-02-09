@@ -5,6 +5,19 @@ applications:
       phases:
         preBuild:
           commands:
+            - |
+              cat <<EOF > apps/manage/.env.production
+              NEXTAUTH_URL=${NEXTAUTH_URL}
+              NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+              DATABASE_URL=${DATABASE_URL}
+              ASSETS_BUCKET=${ASSETS_BUCKET}
+              ASSETS_QUEUE_URL=${ASSETS_QUEUE_URL}
+              AWS_REGION=${AWS_REGION}
+              GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+              GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+              TWITTER_CLIENT_ID=${TWITTER_CLIENT_ID}
+              TWITTER_CLIENT_SECRET=${TWITTER_CLIENT_SECRET}
+              EOF
             - npm install
         build:
           commands:
