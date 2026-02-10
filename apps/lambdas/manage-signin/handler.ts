@@ -6,6 +6,22 @@ import { verifyPassword } from "../../../packages/auth/password";
 export async function handler(
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> {
+  const requestId = event.requestContext.requestId;
+  console.log("[signin] start", { requestId });
+  const dbInfo = (() => {
+    try {
+      const url = new URL(process.env.DATABASE_URL ?? "");
+      return {
+        host: url.host,
+        database: url.pathname.replace("/", "") || "(empty)",
+        user: url.username || "(empty)",
+      };
+    } catch {
+      return { host: "invalid", database: "invalid", user: "invalid" };
+    }
+  })();
+  console.log("[signin] db info", { requestId, ...dbInfo });
+
   if (event.requestContext.http.method === "OPTIONS") {
     return json(204, {});
   }
@@ -25,24 +41,38 @@ export async function handler(
     return json(400, { error: "Invalid request" });
   }
 
-  const email = typeof body.email === "string" ? body.email.toLowerCase() : "";
+  const email =
+    typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
   if (!email || !password) {
     return json(400, { error: "Invalid input" });
   }
 
   const db = getDb();
-  const account = await getEmailAuthAccountByEmail(db, email);
-  if (!account || !account.passwordHash) {
-    return json(401, { error: "Unauthorized" });
-  }
+  try {
+    const account = await getEmailAuthAccountByEmail(db, email);
+    if (!account || !account.passwordHash) {
+      console.warn("[signin] missing account", { requestId, email });
+      return json(401, { error: "Unauthorized" });
+    }
 
-  const ok = await verifyPassword(password, account.passwordHash);
-  if (!ok) {
-    return json(401, { error: "Unauthorized" });
-  }
+    const ok = await verifyPassword(password, account.passwordHash);
+    if (!ok) {
+      console.warn("[signin] password mismatch", { requestId, email });
+      return json(401, { error: "Unauthorized" });
+    }
 
-  return json(200, { ok: true, userId: account.userId, email: account.email });
+    console.log("[signin] success", { requestId, userId: account.userId });
+    return json(200, { ok: true, userId: account.userId, email: account.email });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const code = typeof (error as any)?.code === "string" ? (error as any).code : "unknown";
+    console.error("[signin] failed", { requestId, code, message });
+    if (process.env.SIGNIN_DEBUG === "true") {
+      return json(500, { error: "Signin failed", code, message });
+    }
+    return json(500, { error: "Signin failed" });
+  }
 }
 
 function json(statusCode: number, body: Record<string, unknown>): APIGatewayProxyStructuredResultV2 {
