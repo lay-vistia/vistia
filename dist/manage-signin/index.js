@@ -1231,7 +1231,7 @@ var require_utils_webcrypto = __commonJS({
     var nodeCrypto = require("crypto");
     module2.exports = {
       postgresMd5PasswordHash,
-      randomBytes: randomBytes2,
+      randomBytes,
       deriveKey,
       sha256,
       hashByName,
@@ -1241,7 +1241,7 @@ var require_utils_webcrypto = __commonJS({
     var webCrypto = nodeCrypto.webcrypto || globalThis.crypto;
     var subtleCrypto = webCrypto.subtle;
     var textEncoder = new TextEncoder();
-    function randomBytes2(length) {
+    function randomBytes(length) {
       return webCrypto.getRandomValues(Buffer.alloc(length));
     }
     async function md5(string) {
@@ -6895,7 +6895,7 @@ var require_bcryptjs = __commonJS({
   }
 });
 
-// apps/lambdas/manage-signup/handler.ts
+// apps/lambdas/manage-signin/handler.ts
 var handler_exports = {};
 __export(handler_exports, {
   handler: () => handler
@@ -6929,57 +6929,27 @@ function getDb() {
   return pool;
 }
 
-// packages/db/userRepo.ts
-async function createUser(db, input) {
-  await db.query(
-    "INSERT INTO users (id, handle, displayName, bio, plan, createdAt, updatedAt) VALUES ($1, $2, $3, '', 'FREE', now(), now())",
-    [input.id, input.handle, input.displayName]
-  );
-}
-
 // packages/db/authAccountRepo.ts
-async function createEmailAuthAccount(db, input) {
-  await db.query(
-    "INSERT INTO auth_accounts (id, userId, provider, email, passwordHash, createdAt, updatedAt) VALUES ($1, $2, 'EMAIL', $3, $4, now(), now())",
-    [input.id, input.userId, input.email, input.passwordHash]
+async function getEmailAuthAccountByEmail(db, email) {
+  const res = await db.query(
+    "SELECT userId, email, passwordHash FROM auth_accounts WHERE provider = 'EMAIL' AND email = $1",
+    [email]
   );
-}
-
-// packages/shared/uuidv7.ts
-var import_crypto = require("crypto");
-function uuidv7() {
-  const bytes = (0, import_crypto.randomBytes)(16);
-  const now = Date.now();
-  bytes[0] = now >>> 40 & 255;
-  bytes[1] = now >>> 32 & 255;
-  bytes[2] = now >>> 24 & 255;
-  bytes[3] = now >>> 16 & 255;
-  bytes[4] = now >>> 8 & 255;
-  bytes[5] = now & 255;
-  bytes[6] = bytes[6] & 15 | 112;
-  bytes[8] = bytes[8] & 63 | 128;
-  return byteToHex(bytes[0]) + byteToHex(bytes[1]) + byteToHex(bytes[2]) + byteToHex(bytes[3]) + "-" + byteToHex(bytes[4]) + byteToHex(bytes[5]) + "-" + byteToHex(bytes[6]) + byteToHex(bytes[7]) + "-" + byteToHex(bytes[8]) + byteToHex(bytes[9]) + "-" + byteToHex(bytes[10]) + byteToHex(bytes[11]) + byteToHex(bytes[12]) + byteToHex(bytes[13]) + byteToHex(bytes[14]) + byteToHex(bytes[15]);
-}
-function byteToHex(value) {
-  return value.toString(16).padStart(2, "0");
+  return res.rows[0] ?? null;
 }
 
 // packages/auth/password.ts
 var import_bcryptjs = __toESM(require_bcryptjs(), 1);
-var SALT_ROUNDS = 12;
-async function hashPassword(plain) {
-  return import_bcryptjs.default.hash(plain, SALT_ROUNDS);
+async function verifyPassword(plain, hashed) {
+  return import_bcryptjs.default.compare(plain, hashed);
 }
 
-// apps/lambdas/manage-signup/handler.ts
-var HANDLE_REGEX = /^[a-z0-9_]{3,20}$/;
+// apps/lambdas/manage-signin/handler.ts
 async function handler(event) {
-  const requestId = event.requestContext.requestId;
-  console.log("[signup] start", { requestId });
   if (event.requestContext.http.method === "OPTIONS") {
     return json(204, {});
   }
-  const apiKey = process.env.SIGNUP_API_KEY;
+  const apiKey = process.env.SIGNIN_API_KEY;
   if (apiKey && event.headers["x-api-key"] !== apiKey) {
     return json(401, { error: "Unauthorized" });
   }
@@ -6989,39 +6959,21 @@ async function handler(event) {
   if (!body) {
     return json(400, { error: "Invalid request" });
   }
-  const handle = typeof body.handle === "string" ? body.handle : "";
-  const displayName = typeof body.displayName === "string" ? body.displayName : "";
   const email = typeof body.email === "string" ? body.email.toLowerCase() : "";
   const password = typeof body.password === "string" ? body.password : "";
-  if (!HANDLE_REGEX.test(handle) || !displayName || !email || !password) {
+  if (!email || !password) {
     return json(400, { error: "Invalid input" });
   }
-  const userId = uuidv7();
-  const authAccountId = uuidv7();
-  const passwordHash = await hashPassword(password);
   const db = getDb();
-  try {
-    await db.query("BEGIN");
-    await createUser(db, { id: userId, handle, displayName });
-    await createEmailAuthAccount(db, {
-      id: authAccountId,
-      userId,
-      email,
-      passwordHash
-    });
-    await db.query("COMMIT");
-    console.log("[signup] success", { requestId, userId });
-  } catch (error) {
-    await db.query("ROLLBACK");
-    const message = error instanceof Error ? error.message : String(error);
-    const code = typeof error?.code === "string" ? error.code : "unknown";
-    console.error("[signup] failed", { requestId, code, message });
-    if (process.env.SIGNUP_DEBUG === "true") {
-      return json(400, { error: "Signup failed", code, message });
-    }
-    return json(400, { error: "Signup failed" });
+  const account = await getEmailAuthAccountByEmail(db, email);
+  if (!account || !account.passwordHash) {
+    return json(401, { error: "Unauthorized" });
   }
-  return json(200, { ok: true, userId });
+  const ok = await verifyPassword(password, account.passwordHash);
+  if (!ok) {
+    return json(401, { error: "Unauthorized" });
+  }
+  return json(200, { ok: true, userId: account.userId, email: account.email });
 }
 function json(statusCode, body) {
   return {

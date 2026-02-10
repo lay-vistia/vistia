@@ -3,11 +3,7 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 import TwitterProvider from "next-auth/providers/twitter";
 import { getDb } from "../../../../../../packages/db/client";
-import {
-  getAuthAccountByProviderUserId,
-  getEmailAuthAccountByEmail,
-} from "../../../../../../packages/db/authAccountRepo";
-import { verifyPassword } from "../../../../../../packages/auth/password";
+import { getAuthAccountByProviderUserId } from "../../../../../../packages/db/authAccountRepo";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -22,14 +18,25 @@ export const authOptions: NextAuthOptions = {
         const password = credentials?.password ?? "";
         if (!email || !password) return null;
 
-        const db = getDb();
-        const account = await getEmailAuthAccountByEmail(db, email);
-        if (!account || !account.passwordHash) return null;
+        const signinEndpoint = process.env.SIGNIN_ENDPOINT;
+        if (!signinEndpoint) return null;
 
-        const ok = await verifyPassword(password, account.passwordHash);
-        if (!ok) return null;
+        const response = await fetch(signinEndpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            ...(process.env.SIGNIN_API_KEY
+              ? { "x-api-key": process.env.SIGNIN_API_KEY }
+              : {}),
+          },
+          body: JSON.stringify({ email, password }),
+          cache: "no-store",
+        });
 
-        return { id: account.userId, email: account.email };
+        const data = await response.json().catch(() => null);
+        if (!response.ok || !data?.userId) return null;
+
+        return { id: data.userId as string, email: data.email ?? email };
       },
     }),
     GoogleProvider({

@@ -19,6 +19,8 @@ applications:
               TWITTER_CLIENT_SECRET=${TWITTER_CLIENT_SECRET}
               SIGNUP_ENDPOINT=${SIGNUP_ENDPOINT}
               SIGNUP_API_KEY=${SIGNUP_API_KEY}
+              SIGNIN_ENDPOINT=${SIGNIN_ENDPOINT}
+              SIGNIN_API_KEY=${SIGNIN_API_KEY}
               EOF
             - npm install
         build:

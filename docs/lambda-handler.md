@@ -21,3 +21,15 @@
 - 依存環境変数:
   - `DATABASE_URL`
   - `SIGNUP_API_KEY`（任意 / `x-api-key` で検証）
+
+## 3. Manage ログイン（Function URL）
+- パス: `apps/lambdas/manage-signin/handler.ts`
+- ビルド出力: `dist/manage-signin/index.js`
+- Lambda Handler: `index.handler`
+- 目的: Email ログインの認証
+- 受信: `POST` JSON
+  - `email`
+  - `password`
+- 依存環境変数:
+  - `DATABASE_URL`
+  - `SIGNIN_API_KEY`（任意 / `x-api-key` で検証）

@@ -10,6 +10,9 @@ const HANDLE_REGEX = /^[a-z0-9_]{3,20}$/;
 export async function handler(
   event: APIGatewayProxyEventV2
 ): Promise<APIGatewayProxyStructuredResultV2> {
+  const requestId = event.requestContext.requestId;
+  console.log("[signup] start", { requestId });
+
   if (event.requestContext.http.method === "OPTIONS") {
     return json(204, {});
   }
@@ -53,11 +56,15 @@ export async function handler(
       passwordHash,
     });
     await db.query("COMMIT");
+    console.log("[signup] success", { requestId, userId });
   } catch (error) {
     await db.query("ROLLBACK");
     const message = error instanceof Error ? error.message : String(error);
     const code = typeof (error as any)?.code === "string" ? (error as any).code : "unknown";
-    console.error("[signup] failed", { code, message });
+    console.error("[signup] failed", { requestId, code, message });
+    if (process.env.SIGNUP_DEBUG === "true") {
+      return json(400, { error: "Signup failed", code, message });
+    }
     return json(400, { error: "Signup failed" });
   }
 
