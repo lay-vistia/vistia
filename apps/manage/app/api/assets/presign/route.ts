@@ -42,12 +42,18 @@ export async function POST(request: Request) {
   }
 
   const s3 = createS3Client(region);
-  const uploadUrl = await presignPut(s3, { bucket, region }, key, contentType, 600);
+  try {
+    const uploadUrl = await presignPut(s3, { bucket, region }, key, contentType, 600);
 
-  return NextResponse.json({
-    assetId,
-    uploadUrl,
-    key,
-    expiresInSeconds: 600,
-  });
+    return NextResponse.json({
+      assetId,
+      uploadUrl,
+      key,
+      expiresInSeconds: 600,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[presign] failed", { message });
+    return NextResponse.json({ error: "Presign failed" }, { status: 500 });
+  }
 }
