@@ -34,7 +34,13 @@ export const authOptions: NextAuthOptions = {
         });
 
         const data = await response.json().catch(() => null);
-        if (!response.ok || !data?.userId) return null;
+        if (!response.ok || !data?.userId) {
+          console.warn("[signin] failed", {
+            status: response.status,
+            body: data ?? null,
+          });
+          return null;
+        }
 
         return { id: data.userId as string, email: data.email ?? email };
       },

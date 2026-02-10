@@ -47,6 +47,10 @@
 - `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
 - `SIGNUP_API_KEY`: `fyTguZHUbE+DgsbvXqhmwXz6zP/NeoGKz5WBZS8R0Ys=`
 
+### Lambda / Manage Delete User（devのみ）
+- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
+- `INSPECT_API_KEY`: `LYEYpJKymw7bgjlCJjVh+8276O+0xrJZqIXpN/LKNRI=`
+
 ## stg
 
 ### Amplify / Manage
@@ -92,6 +96,9 @@
 ### Lambda / Manage Check User
 - （devのみ）
 
+### Lambda / Manage Delete User
+- （devのみ）
+
 ## prod
 
 ### Amplify / Manage
@@ -135,4 +142,7 @@
 - （devのみ）
 
 ### Lambda / Manage Check User
+- （devのみ）
+
+### Lambda / Manage Delete User
 - （devのみ）

@@ -6991,7 +6991,7 @@ async function handler(event) {
   }
   const handle = typeof body.handle === "string" ? body.handle : "";
   const displayName = typeof body.displayName === "string" ? body.displayName : "";
-  const email = typeof body.email === "string" ? body.email.toLowerCase() : "";
+  const email = typeof body.email === "string" ? body.email.trim().toLowerCase().normalize("NFKC") : "";
   const password = typeof body.password === "string" ? body.password : "";
   if (!HANDLE_REGEX.test(handle) || !displayName || !email || !password) {
     return json(400, { error: "Invalid input" });

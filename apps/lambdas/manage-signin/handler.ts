@@ -1,6 +1,5 @@
 import { APIGatewayProxyEventV2, APIGatewayProxyStructuredResultV2 } from "aws-lambda";
 import { getDb } from "../../../packages/db/client";
-import { getEmailAuthAccountByEmail } from "../../../packages/db/authAccountRepo";
 import { verifyPassword } from "../../../packages/auth/password";
 
 export async function handler(
@@ -41,8 +40,8 @@ export async function handler(
     return json(400, { error: "Invalid request" });
   }
 
-  const email =
-    typeof body.email === "string" ? body.email.trim().toLowerCase() : "";
+  const emailRaw = typeof body.email === "string" ? body.email : "";
+  const email = normalizeEmail(emailRaw);
   const password = typeof body.password === "string" ? body.password : "";
   if (!email || !password) {
     return json(400, { error: "Invalid input" });
@@ -50,7 +49,29 @@ export async function handler(
 
   const db = getDb();
   try {
-    const account = await getEmailAuthAccountByEmail(db, email);
+    const countRes = await db.query("select count(*)::int as count from auth_accounts");
+    const totalCount = countRes.rows?.[0]?.count ?? 0;
+    console.log("[signin] auth_accounts count", { requestId, totalCount });
+
+    const listRes = await db.query(
+      "select userid as \"userId\", email, passwordhash as \"passwordHash\", provider from auth_accounts where provider = 'EMAIL' order by createdat desc limit 5"
+    );
+    console.log("[signin] recent accounts", { requestId, rows: listRes.rows });
+
+    const normalizedRows = listRes.rows.map((row: any) => ({
+      email: row.email ?? null,
+      normalized: normalizeEmail(row.email ?? ""),
+    }));
+    console.log("[signin] normalized emails", { requestId, normalizedRows, input: email });
+
+    const account =
+      listRes.rows.find((row: any) => normalizeEmail(row.email ?? "") === email) ?? null;
+    console.log("[signin] email debug", {
+      requestId,
+      input: email,
+      inputLen: email.length,
+      inputChars: Array.from(email).map((c) => c.charCodeAt(0)),
+    });
     if (!account || !account.passwordHash) {
       console.warn("[signin] missing account", { requestId, email });
       return json(401, { error: "Unauthorized" });
@@ -94,4 +115,12 @@ function safeJson(text: string): any {
   } catch {
     return null;
   }
+}
+
+function normalizeEmail(input: string): string {
+  return input
+    .trim()
+    .toLowerCase()
+    .normalize("NFKC")
+    .replace(/[\s\u200B-\u200D\uFEFF]/g, "");
 }
