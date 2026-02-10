@@ -18,6 +18,9 @@
 - `SIGNIN_API_KEY`: `FZa30BXB2c0D57r2+P+3asioKvSxVbX1xraWPuIctsM=`
 - `ASSETS_BUCKET`: `vistia-dev-assets`
 - `ASSETS_QUEUE_URL`: `https://sqs.ap-northeast-3.amazonaws.com/268431584619/vistia-dev-assets-queue`
+- `APP_AWS_ACCESS_KEY_ID`: （削除）
+- `APP_AWS_SECRET_ACCESS_KEY`: （削除）
+- `APP_AWS_REGION`: `ap-northeast-3`
 
 ### Amplify / Public
 - （未設定）

@@ -36,7 +36,7 @@ export async function POST(request: Request) {
   const key = originalKey(userId, assetId, ext);
 
   const bucket = process.env.ASSETS_BUCKET;
-  const region = process.env.AWS_REGION;
+  const region = process.env.APP_AWS_REGION ?? process.env.AWS_REGION;
   if (!bucket || !region) {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
   }

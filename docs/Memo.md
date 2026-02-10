@@ -8,3 +8,6 @@ RDS Proxy: vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.c
 curl -H "x-api-key: LYEYpJKymw7bgjlCJjVh+8276O+0xrJZqIXpN/LKNRI=" "https://d6lfvqzc7dlrxf6lr3dnp7jq3i0opdqd.lambda-url.ap-northeast-3.on.aws/?action=recent&table=auth_accounts&limit=20"
 
 curl -H "x-api-key: LYEYpJKymw7bgjlCJjVh+8276O+0xrJZqIXpN/LKNRI=" "https://247dsxpspk44gw5hgxc4wt2rje0bsjhe.lambda-url.ap-northeast-3.on.aws/?email=nonas.peta@mocomoco.xyz"
+
+AWS_ACCESS_KEY_ID: （削除）
+AWS_SECRET_ACCESS_KEY: （削除）
