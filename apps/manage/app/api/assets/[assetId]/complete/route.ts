@@ -109,9 +109,6 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
-<<<<<<< HEAD
-    console.error("[complete] failed", error);
-=======
     const err = error as {
       name?: string;
       message?: string;
@@ -128,7 +125,6 @@ export async function POST(
       metadata: err?.$metadata,
       stack: err?.stack,
     });
->>>>>>> d383fb0 (chore(upload): add detailed error logging in complete API)
     return NextResponse.json({ error: "Upload verification failed" }, { status: 500 });
   }
 }
