@@ -6,7 +6,7 @@ import { getAssetById, updateAssetStatus } from "../../../packages/db/assetRepo"
 import { originalKey, optimizedKey, thumbKey } from "../../../packages/storage/keys";
 import { putObjectTags } from "../../../packages/storage/s3";
 
-const JPEG_QUALITY = 80;
+const WEBP_QUALITY = 80;
 const OPTIMIZED_MAX = 1280;
 const THUMB_SIZE = 512;
 
@@ -38,16 +38,20 @@ export async function handler(event: SQSEvent): Promise<void> {
     try {
       const originalBytes = await getObjectBytes(s3, bucket, original);
 
-      const base = sharp(originalBytes, { failOnError: true }).rotate();
+      const base = sharp(originalBytes, { failOnError: true })
+        .rotate()
+        .flatten({ background: "#ffffff" });
 
       const optimizedBytes = await base
+        .clone()
         .resize({ width: OPTIMIZED_MAX, height: OPTIMIZED_MAX, fit: "inside", withoutEnlargement: true })
-        .jpeg({ quality: JPEG_QUALITY })
+        .webp({ quality: WEBP_QUALITY })
         .toBuffer();
 
       const thumbBytes = await base
+        .clone()
         .resize({ width: THUMB_SIZE, height: THUMB_SIZE, fit: "cover", position: "center" })
-        .jpeg({ quality: JPEG_QUALITY })
+        .webp({ quality: WEBP_QUALITY })
         .toBuffer();
 
       await s3.send(
@@ -55,7 +59,7 @@ export async function handler(event: SQSEvent): Promise<void> {
           Bucket: bucket,
           Key: optimized,
           Body: optimizedBytes,
-          ContentType: "image/jpeg",
+          ContentType: "image/webp",
           CacheControl: "public, max-age=31536000, immutable",
         })
       );
@@ -65,7 +69,7 @@ export async function handler(event: SQSEvent): Promise<void> {
           Bucket: bucket,
           Key: thumb,
           Body: thumbBytes,
-          ContentType: "image/jpeg",
+          ContentType: "image/webp",
           CacheControl: "public, max-age=31536000, immutable",
         })
       );

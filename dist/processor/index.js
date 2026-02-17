@@ -38847,10 +38847,10 @@ function originalKey(userId, assetId, ext) {
   return `assets/original/${userId}/${assetId}.${ext}`;
 }
 function optimizedKey(userId, assetId) {
-  return `assets/optimized/${userId}/${assetId}.jpg`;
+  return `assets/optimized/${userId}/${assetId}.webp`;
 }
 function thumbKey(userId, assetId, version) {
-  return `assets/thumb/${userId}/${assetId}_v${version}.jpg`;
+  return `assets/thumb/${userId}/${assetId}_v${version}.webp`;
 }
 
 // packages/storage/s3.ts
@@ -38868,7 +38868,7 @@ async function putObjectTags(s32, cfg, key, tags) {
 }
 
 // apps/lambdas/processor/handler.ts
-var JPEG_QUALITY = 80;
+var WEBP_QUALITY = 80;
 var OPTIMIZED_MAX = 1280;
 var THUMB_SIZE = 512;
 async function handler(event) {
@@ -38891,15 +38891,15 @@ async function handler(event) {
     const previousThumb = asset.thumbVersion > 1 ? thumbKey(asset.userId, asset.assetId, asset.thumbVersion - 1) : null;
     try {
       const originalBytes = await getObjectBytes(s32, bucket, original);
-      const base = (0, import_sharp.default)(originalBytes, { failOnError: true }).rotate();
-      const optimizedBytes = await base.resize({ width: OPTIMIZED_MAX, height: OPTIMIZED_MAX, fit: "inside", withoutEnlargement: true }).jpeg({ quality: JPEG_QUALITY }).toBuffer();
-      const thumbBytes = await base.resize({ width: THUMB_SIZE, height: THUMB_SIZE, fit: "cover", position: "center" }).jpeg({ quality: JPEG_QUALITY }).toBuffer();
+      const base = (0, import_sharp.default)(originalBytes, { failOnError: true }).rotate().flatten({ background: "#ffffff" });
+      const optimizedBytes = await base.clone().resize({ width: OPTIMIZED_MAX, height: OPTIMIZED_MAX, fit: "inside", withoutEnlargement: true }).webp({ quality: WEBP_QUALITY }).toBuffer();
+      const thumbBytes = await base.clone().resize({ width: THUMB_SIZE, height: THUMB_SIZE, fit: "cover", position: "center" }).webp({ quality: WEBP_QUALITY }).toBuffer();
       await s32.send(
         new import_client_s32.PutObjectCommand({
           Bucket: bucket,
           Key: optimized,
           Body: optimizedBytes,
-          ContentType: "image/jpeg",
+          ContentType: "image/webp",
           CacheControl: "public, max-age=31536000, immutable"
         })
       );
@@ -38908,7 +38908,7 @@ async function handler(event) {
           Bucket: bucket,
           Key: thumb,
           Body: thumbBytes,
-          ContentType: "image/jpeg",
+          ContentType: "image/webp",
           CacheControl: "public, max-age=31536000, immutable"
         })
       );
