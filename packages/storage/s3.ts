@@ -13,6 +13,19 @@ export type S3Config = {
 };
 
 export function createS3Client(region: string): S3Client {
+  const accessKeyId = process.env.APP_AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.APP_AWS_SECRET_ACCESS_KEY;
+
+  if (accessKeyId && secretAccessKey) {
+    return new S3Client({
+      region,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
+  }
+
   return new S3Client({ region });
 }
 

@@ -3,23 +3,23 @@
 ## dev
 
 ### Amplify / Manage
-- `NEXTAUTH_URL`: `https://dev.manage.vistia.studio`
-- `NEXTAUTH_SECRET`: `bVyhOsD+8GOAJYdPY8EXF80K37m8n/fgLn9XtEmtZMU=`
+- `NEXTAUTH_URL`: `vistia/dev/manage/NEXTAUTH`
+- `NEXTAUTH_SECRET`: `vistia/dev/manage/NEXTAUTH`
 - `GOOGLE_CLIENT_ID`: （未設定）
 - `GOOGLE_CLIENT_SECRET`: （未設定）
 - `TWITTER_CLIENT_ID`: （未設定）
 - `TWITTER_CLIENT_SECRET`: （未設定）
 - `TIKTOK_CLIENT_ID`: （未設定）
 - `TIKTOK_CLIENT_SECRET`: （未設定）
-- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
 - `SIGNUP_ENDPOINT`: `https://vh5uyvyohguybkdggnwlwiicwi0aumsj.lambda-url.ap-northeast-3.on.aws/`
-- `SIGNUP_API_KEY`: `fyTguZHUbE+DgsbvXqhmwXz6zP/NeoGKz5WBZS8R0Ys=`
+- `SIGNUP_API_KEY`: `vistia/dev/manage/API_KEY`
 - `SIGNIN_ENDPOINT`: `https://m7muwiq4g63rmgcciag7wlxsdi0guwee.lambda-url.ap-northeast-3.on.aws/`
-- `SIGNIN_API_KEY`: `FZa30BXB2c0D57r2+P+3asioKvSxVbX1xraWPuIctsM=`
+- `SIGNIN_API_KEY`: `vistia/dev/manage/API_KEY`
 - `ASSETS_BUCKET`: `vistia-dev-assets`
 - `ASSETS_QUEUE_URL`: `https://sqs.ap-northeast-3.amazonaws.com/268431584619/vistia-dev-assets-queue`
-- `APP_AWS_ACCESS_KEY_ID`: （削除）
-- `APP_AWS_SECRET_ACCESS_KEY`: （削除）
+- `APP_AWS_ACCESS_KEY_ID`: `vistia/dev/manage/AWS_ACCESS_KEY`
+- `APP_AWS_SECRET_ACCESS_KEY`: `vistia/dev/manage/AWS_ACCESS_KEY`
 - `APP_AWS_REGION`: `ap-northeast-3`
 
 ### Amplify / Public
@@ -29,29 +29,29 @@
 - （未設定）
 
 ### Lambda / Processor
-- `ASSETS_BUCKET`: （未設定）
-- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
-- `AWS_DEFAULT_REGION`: （未設定）
+- `ASSETS_BUCKET`: `vistia-dev-assets`
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
+- `AWS_DEFAULT_REGION`: `ap-northeast-3`
 
 ### Lambda / Manage Signup
-- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
 - `SIGNUP_API_KEY`: `fyTguZHUbE+DgsbvXqhmwXz6zP/NeoGKz5WBZS8R0Ys=`
 
 ### Lambda / Manage Signin
-- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
 - `SIGNIN_API_KEY`: `FZa30BXB2c0D57r2+P+3asioKvSxVbX1xraWPuIctsM=`
 
 ### Lambda / Inspect DB（devのみ）
 - `INSPECT_API_KEY`: `LYEYpJKymw7bgjlCJjVh+8276O+0xrJZqIXpN/LKNRI=`
 - `INSPECT_TABLES`: （必要に応じて設定。全許可なら "*"）
-- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
 
 ### Lambda / Manage Check User（devのみ）
-- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
 - `SIGNUP_API_KEY`: `fyTguZHUbE+DgsbvXqhmwXz6zP/NeoGKz5WBZS8R0Ys=`
 
 ### Lambda / Manage Delete User（devのみ）
-- `DATABASE_URL`: `postgresql://vistia_admin:VdAQp2oCN6F2JeVroLVp@vistia-dev-db-proxy.proxy-c78qko2uox30.ap-northeast-3.rds.amazonaws.com:5432/vistia?sslmode=require`
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
 - `INSPECT_API_KEY`: `LYEYpJKymw7bgjlCJjVh+8276O+0xrJZqIXpN/LKNRI=`
 
 ## stg
