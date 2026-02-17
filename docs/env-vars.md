@@ -16,6 +16,8 @@
 - `SIGNUP_API_KEY`: `vistia/dev/manage/API_KEY`
 - `SIGNIN_ENDPOINT`: `https://m7muwiq4g63rmgcciag7wlxsdi0guwee.lambda-url.ap-northeast-3.on.aws/`
 - `SIGNIN_API_KEY`: `vistia/dev/manage/API_KEY`
+- `COMPLETE_ENDPOINT`: `https://2to4btvnj2dqkd4aqwxp6pcaf40daxhr.lambda-url.ap-northeast-3.on.aws/`
+- `COMPLETE_API_KEY`: `vistia/dev/manage/API_KEY`
 - `ASSETS_BUCKET`: `vistia-dev-assets`
 - `ASSETS_QUEUE_URL`: `https://sqs.ap-northeast-3.amazonaws.com/268431584619/vistia-dev-assets-queue`
 - `APP_AWS_ACCESS_KEY_ID`: `vistia/dev/manage/AWS_ACCESS_KEY`
@@ -40,6 +42,13 @@
 ### Lambda / Manage Signin
 - `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
 - `SIGNIN_API_KEY`: `FZa30BXB2c0D57r2+P+3asioKvSxVbX1xraWPuIctsM=`
+
+### Lambda / Manage Complete
+- `DATABASE_URL`: `vistia/dev/manage/DATABASE_URL`
+- `ASSETS_BUCKET`: `vistia-dev-assets`
+- `ASSETS_QUEUE_URL`: `https://sqs.ap-northeast-3.amazonaws.com/268431584619/vistia-dev-assets-queue`
+- `APP_AWS_REGION`: `ap-northeast-3`
+- `COMPLETE_API_KEY`: `vistia/dev/manage/API_KEY`
 
 ### Lambda / Inspect DB（devのみ）
 - `INSPECT_API_KEY`: `LYEYpJKymw7bgjlCJjVh+8276O+0xrJZqIXpN/LKNRI=`
@@ -70,6 +79,8 @@
 - `SIGNUP_API_KEY`: （未設定）
 - `SIGNIN_ENDPOINT`: （未設定）
 - `SIGNIN_API_KEY`: （未設定）
+- `COMPLETE_ENDPOINT`: （未設定）
+- `COMPLETE_API_KEY`: （未設定）
 - `ASSETS_BUCKET`: （未設定）
 - `ASSETS_QUEUE_URL`: （未設定）
 - `AWS_REGION`: （未設定）
@@ -92,6 +103,13 @@
 ### Lambda / Manage Signin
 - `DATABASE_URL`: （未設定）
 - `SIGNIN_API_KEY`: （未設定）
+
+### Lambda / Manage Complete
+- `DATABASE_URL`: （未設定）
+- `ASSETS_BUCKET`: （未設定）
+- `ASSETS_QUEUE_URL`: （未設定）
+- `APP_AWS_REGION`: （未設定）
+- `COMPLETE_API_KEY`: （未設定）
 
 ### Lambda / Inspect DB
 - （devのみ）
@@ -118,6 +136,8 @@
 - `SIGNUP_API_KEY`: （未設定）
 - `SIGNIN_ENDPOINT`: （未設定）
 - `SIGNIN_API_KEY`: （未設定）
+- `COMPLETE_ENDPOINT`: （未設定）
+- `COMPLETE_API_KEY`: （未設定）
 - `ASSETS_BUCKET`: （未設定）
 - `ASSETS_QUEUE_URL`: （未設定）
 - `AWS_REGION`: （未設定）
@@ -140,6 +160,13 @@
 ### Lambda / Manage Signin
 - `DATABASE_URL`: （未設定）
 - `SIGNIN_API_KEY`: （未設定）
+
+### Lambda / Manage Complete
+- `DATABASE_URL`: （未設定）
+- `ASSETS_BUCKET`: （未設定）
+- `ASSETS_QUEUE_URL`: （未設定）
+- `APP_AWS_REGION`: （未設定）
+- `COMPLETE_API_KEY`: （未設定）
 
 ### Lambda / Inspect DB
 - （devのみ）

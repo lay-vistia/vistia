@@ -33,3 +33,19 @@
 - 依存環境変数:
   - `DATABASE_URL`
   - `SIGNIN_API_KEY`（任意 / `x-api-key` で検証）
+
+## 4. Manage アップロード完了（Function URL）
+- パス: `apps/lambdas/manage-complete/handler.ts`
+- ビルド出力: `dist/manage-complete/index.js`
+- Lambda Handler: `index.handler`
+- 目的: アップロード検証（S3）+ `assets` 保存（DB）+ SQS投入
+- 受信: `POST` JSON
+  - `assetId`
+  - `userId`
+  - `ext`
+- 依存環境変数:
+  - `DATABASE_URL`
+  - `ASSETS_BUCKET`
+  - `ASSETS_QUEUE_URL`
+  - `APP_AWS_REGION`（または `AWS_REGION` / `AWS_DEFAULT_REGION`）
+  - `COMPLETE_API_KEY`（任意 / `x-api-key` で検証）

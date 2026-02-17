@@ -23,6 +23,8 @@ applications:
               SIGNUP_API_KEY=${SIGNUP_API_KEY}
               SIGNIN_ENDPOINT=${SIGNIN_ENDPOINT}
               SIGNIN_API_KEY=${SIGNIN_API_KEY}
+              COMPLETE_ENDPOINT=${COMPLETE_ENDPOINT}
+              COMPLETE_API_KEY=${COMPLETE_API_KEY}
               EOF
             - npm install
         build:
