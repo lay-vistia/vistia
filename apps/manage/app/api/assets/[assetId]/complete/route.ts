@@ -38,7 +38,7 @@ export async function POST(
   }
 
   const bucket = process.env.ASSETS_BUCKET;
-  const region = process.env.AWS_REGION;
+  const region = process.env.APP_AWS_REGION ?? process.env.AWS_REGION;
   const queueUrl = process.env.ASSETS_QUEUE_URL;
   if (!bucket || !region || !queueUrl) {
     return NextResponse.json({ error: "Server misconfigured" }, { status: 500 });
@@ -109,6 +109,7 @@ export async function POST(
 
     return NextResponse.json({ ok: true });
   } catch (error) {
+    console.error("[complete] failed", error);
     return NextResponse.json({ error: "Upload verification failed" }, { status: 500 });
   }
 }

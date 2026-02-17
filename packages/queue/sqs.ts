@@ -6,6 +6,19 @@ export type SqsConfig = {
 };
 
 export function createSqsClient(region: string): SQSClient {
+  const accessKeyId = process.env.APP_AWS_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.APP_AWS_SECRET_ACCESS_KEY;
+
+  if (accessKeyId && secretAccessKey) {
+    return new SQSClient({
+      region,
+      credentials: {
+        accessKeyId,
+        secretAccessKey,
+      },
+    });
+  }
+
   return new SQSClient({ region });
 }
 
